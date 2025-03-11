@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
+
 @Service
 public class ExcelService {
 
@@ -22,16 +23,24 @@ public class ExcelService {
             Row headerRow = sheet.getRow(0);
             List<String> headers = new ArrayList<>();
 
+            // Read headers
             for (Cell cell : headerRow) {
-                headers.add(cell.getStringCellValue());
+                headers.add(cell.getStringCellValue().trim()); // Trim to avoid leading/trailing spaces
             }
 
+            // Read data rows
             for (int j = 1; j <= sheet.getLastRowNum(); j++) {
                 Row row = sheet.getRow(j);
                 Map<String, Object> rowData = new HashMap<>();
+
+                // Ensure that we are not accessing cells out of bounds
                 for (int k = 0; k < headers.size(); k++) {
                     Cell cell = row.getCell(k);
-                    rowData.put(headers.get(k), cell != null ? cell.toString() : null);
+                    if (cell != null) {
+                        rowData.put(headers.get(k), getCellValue(cell)); // Use helper method to get cell value
+                    } else {
+                        rowData.put(headers.get(k), null); // Handle null cells
+                    }
                 }
                 sheetData.add(rowData);
             }
@@ -51,6 +60,7 @@ public class ExcelService {
         Set<String> headers = data.get(0).keySet();
         int headerIndex = 0;
 
+        // Create header row
         for (String header : headers) {
             Cell cell = headerRow.createCell(headerIndex++);
             cell.setCellValue(header);
@@ -93,5 +103,3 @@ public class ExcelService {
         }
     }
 }
-
-
